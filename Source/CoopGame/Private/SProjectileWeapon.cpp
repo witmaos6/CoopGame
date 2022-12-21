@@ -3,7 +3,7 @@
 
 #include "SProjectileWeapon.h"
 
-void ASProjectileWeapon::Fire()
+void ASProjectileWeapon::LauncherFire()
 {
 	AActor* MyOwner = GetOwner();
 	if(MyOwner && ProjectileClass)
