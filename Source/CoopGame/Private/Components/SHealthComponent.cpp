@@ -28,7 +28,7 @@ void USHealthComponent::BeginPlay()
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if(Damage <= 0.0f)
+	if(Damage <= 0.0f) // if(Damage > 0.0f){} 이런식으로 구현하는게 더 낫지 않을까?
 	{
 		return;
 	}
