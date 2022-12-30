@@ -9,6 +9,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame/CoopGame.h"
+#include "Net/UnrealNetwork.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing (
@@ -29,6 +30,8 @@ ASWeapon::ASWeapon()
 	BaseDamage = 20.0f;
 
 	RateOfFire = 600;
+
+	SetReplicates(true);
 }
 
 void ASWeapon::BeginPlay()
@@ -41,6 +44,11 @@ void ASWeapon::BeginPlay()
 void ASWeapon::Fire()
 {
 	// Trace the world, from pawn eyes to crosshair location
+
+	if(!HasAuthority()) // prev :GetLocalRole() < ROLE_Authority
+	{
+		ServerFire();
+	}
 
 	AActor* MyOwner = GetOwner();
 	if(MyOwner)
@@ -105,8 +113,28 @@ void ASWeapon::Fire()
 
 		PlayFireEffects(TracerEndPoint);
 
+		if(HasAuthority())
+		{
+			HitScanTrace.TraceTo = TracerEndPoint;
+		}
+
 		LastFireTime = GetWorld()->TimeSeconds;
 	}
+}
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
+}
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	PlayFireEffects(HitScanTrace.TraceTo);
 }
 
 void ASWeapon::StartFire()
@@ -149,4 +177,11 @@ void ASWeapon::PlayFireEffects(FVector TraceEnd)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner);
 }
