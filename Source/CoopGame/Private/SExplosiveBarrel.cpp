@@ -10,8 +10,8 @@
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
 {
-	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
+	BarrelHealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
+	BarrelHealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetSimulatePhysics(true);
@@ -36,7 +36,7 @@ void ASExplosiveBarrel::BeginPlay()
 
 }
 
-void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* BarrelHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwnerHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if(!bExpolded && Health <= 0.0f)
 	{

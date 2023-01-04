@@ -15,10 +15,11 @@ struct FHitScanTrace
 public:
 
 	UPROPERTY()
-	FVector_NetQuantize TraceFrom;
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
 
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
+
 };
 
 UCLASS()
@@ -38,6 +39,8 @@ protected:
 	USkeletalMeshComponent* MeshComp;
 
 	void PlayFireEffects(FVector TraceEnd);
+
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint); // 파라미터가 멤버변수랑 이름이 동일할 시 안되는 오류가 있었는데..
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
@@ -81,7 +84,7 @@ protected:
 
 	float TimeBetweenShots;
 
-	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
 	FHitScanTrace HitScanTrace;
 
 	UFUNCTION()

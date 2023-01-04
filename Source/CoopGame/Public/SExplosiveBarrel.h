@@ -25,7 +25,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USHealthComponent* HealthComp;
+	USHealthComponent* BarrelHealthComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* MeshComp;
@@ -34,7 +34,7 @@ protected:
 	URadialForceComponent* RadialForceComp;
 	
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* BarrelHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	void OnHealthChanged(USHealthComponent* OwnerHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 	bool bExpolded;
 
