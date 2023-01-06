@@ -173,7 +173,7 @@ void ASWeapon::PlayFireEffects(FVector TraceEnd)
 
 void ASWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
 {
-	UParticleSystem* SelectedEffect = nullptr;
+	UParticleSystem* SelectedEffect = nullptr; // SURFACE_FLESHDEFAULT로 세팅해놓고 SurfaceType이 SURFACE_FLESHVULNERABLE 일 때 세팅하는 함수로 바꾸면 안되나?
 
 	switch (SurfaceType)
 	{

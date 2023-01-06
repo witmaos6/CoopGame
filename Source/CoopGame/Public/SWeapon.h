@@ -40,7 +40,7 @@ protected:
 
 	void PlayFireEffects(FVector TraceEnd);
 
-	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint); // 파라미터가 멤버변수랑 이름이 동일할 시 안되는 오류가 있었는데..
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint); // 파라미터가 멤버변수랑 이름이 동일할 시 안되는 오류가 있었는데 수정됐나 보다.
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;

@@ -36,7 +36,11 @@ protected:
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwnerHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
+	UPROPERTY(ReplicatedUsing = OnRep_Exploded)
 	bool bExpolded;
+
+	UFUNCTION()
+	void OnRep_Exploded();
 
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 	float ExplosionImpulse;
@@ -46,4 +50,5 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 	UMaterialInterface* ExplodedMaterial;
+
 };
