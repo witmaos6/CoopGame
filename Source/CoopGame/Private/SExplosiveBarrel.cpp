@@ -55,8 +55,11 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwnerHealthComp, floa
 		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 
-		//UGameplayStatics::ApplyRadialDamage(const UObject * WorldContextObject, float BaseDamage, const FVector & Origin, float DamageRadius, TSubclassOf<UDamageType> DamageTypeClass, const TArray<AActor*>&IgnoreActors, AActor * DamageCauser, AController * InstigatedByController, bool bDoFullDamage, ECollisionChannel DamagePreventionChannel)
-		// Barrel이 폭발 했을 때 범위안에 있는 캐릭터한테 데미지를 주는 기믹을 넣어도 좋을 것 같다. 다양하게 시도 했으나 실패....
+		TArray<AActor*> IgnoredActors;
+		IgnoredActors.Add(this);
+
+		UGameplayStatics::ApplyRadialDamage(this, 80, GetActorLocation(), RadialForceComp->Radius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		// 데미지 적용은 성공했으나 죽은 후에도 연사하는 버그 발생 To do: 수정해야한다.
 
 		RadialForceComp->FireImpulse();
 	}
