@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "PhysicsEngine/RadialForceComponent.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
@@ -55,13 +56,15 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwnerHealthComp, floa
 		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 
+		RadialForceComp->FireImpulse();
+
+		UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
+
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
 		UGameplayStatics::ApplyRadialDamage(this, 80, GetActorLocation(), RadialForceComp->Radius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 		// 데미지 적용은 성공했으나 죽은 후에도 연사하는 버그 발생 To do: 수정해야한다.
-
-		RadialForceComp->FireImpulse();
 	}
 }
 

@@ -11,6 +11,8 @@ class UStaticMeshComponent;
 class URadialForceComponent;
 class UParticleSystem;
 
+class USoundCue;
+
 UCLASS()
 class COOPGAME_API ASExplosiveBarrel : public AActor
 {
@@ -32,6 +34,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	URadialForceComponent* RadialForceComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	USoundCue* ExplodeSound;
 	
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwnerHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
