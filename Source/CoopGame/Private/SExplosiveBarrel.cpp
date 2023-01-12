@@ -64,7 +64,7 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwnerHealthComp, floa
 		IgnoredActors.Add(this);
 
 		UGameplayStatics::ApplyRadialDamage(this, 80, GetActorLocation(), RadialForceComp->Radius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
-		// 데미지 적용은 성공했으나 죽은 후에도 연사하는 버그 발생 To do: 수정해야한다.
+		//To do: 데미지 적용은 성공했으나 죽은 후에도 연사하는 버그 수정해야한다.
 	}
 }
 
