@@ -9,9 +9,17 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SHealthComponent.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 #include "Components/SphereComponent.h"
 #include "SCharacter.h"
 #include "Sound/SoundCue.h"
+
+static int32 DebugTrackerBotDrawing = 0;
+FAutoConsoleVariableRef CVARDebugTrackerBotDrawing(
+	TEXT("COOP.DebugTrackerBot"),
+	DebugTrackerBotDrawing,
+	TEXT("Draw Debug Lines for TrackerBot"),
+	ECVF_Cheat);
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -38,8 +46,8 @@ ASTrackerBot::ASTrackerBot()
 	MovementForce = 1000;
 	RequireDistanceToTarget = 100;
 
-	ExplosionDamage = 40;
-	ExplosionRadius = 200;
+	ExplosionDamage = 60;
+	ExplosionRadius = 350;
 
 	SelfDamageInterval = 0.25f;
 }
@@ -70,8 +78,6 @@ void ASTrackerBot::HandleTakeDamage(USHealthComponent* OwnerHealthComp, float He
 		MatInst->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->TimeSeconds);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Health %s of %s"), *FString::SanitizeFloat(Health), *GetName());
-
 	if (Health <= 0.0f)
 	{
 		SelfDestruct();
@@ -80,16 +86,43 @@ void ASTrackerBot::HandleTakeDamage(USHealthComponent* OwnerHealthComp, float He
 
 FVector ASTrackerBot::GetNextPathPoint()
 {
-	ACharacter* PlayerPawn = UGameplayStatics::GetPlayerCharacter(this, 0);
+	AActor* BestTarget = nullptr;
+	float NearestTargetDistance = FLT_MAX;
 
-	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
-
-	if (NavPath && NavPath->PathPoints.Num() > 1)
+	for (APawn* It : TActorRange<APawn>(GetWorld()))
 	{
-		return NavPath->PathPoints[1];
+		if (It == nullptr || USHealthComponent::IsFriendly(It, this))
+		{
+			continue;
+		}
+
+		USHealthComponent* CurrPawnHealthComp = Cast<USHealthComponent>(It->GetComponentByClass(USHealthComponent::StaticClass()));
+		if (CurrPawnHealthComp && CurrPawnHealthComp->GetHealth() > 0.0f)
+		{
+			float Distance = (It->GetActorLocation() - GetActorLocation()).Size();
+
+			if(Distance < NearestTargetDistance)
+			{
+				BestTarget = It;
+				NearestTargetDistance = Distance;
+			}
+
+		}
 	}
 
-	// Don't move because failed find path
+	if(BestTarget)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
+		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBot::RefreshPath, 5.0f, false);
+
+		if (NavPath && NavPath->PathPoints.Num() > 1)
+		{
+			return NavPath->PathPoints[1];
+		}
+	}
+
 	return GetActorLocation();
 }
 
@@ -119,7 +152,10 @@ void ASTrackerBot::SelfDestruct()
 
 		UGameplayStatics::ApplyRadialDamage(this, ActualDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
-		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
+		if (DebugTrackerBotDrawing)
+		{
+			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
+		}
 
 		SetLifeSpan(2.0f);
 	}
@@ -143,6 +179,11 @@ void ASTrackerBot::OnCheckNearbyBots()
 
 	TArray<FOverlapResult> Overlaps;
 	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
+
+	if(DebugTrackerBotDrawing)
+	{
+		DrawDebugSphere(GetWorld(), GetActorLocation(), Radius, 12, FColor::White, false, 1.0f);
+	}
 
 	int32 NrOfBots = 0;
 	for (FOverlapResult Result : Overlaps)
@@ -169,6 +210,16 @@ void ASTrackerBot::OnCheckNearbyBots()
 
 		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
 	}
+
+	if(DebugTrackerBotDrawing)
+	{
+		DrawDebugString(GetWorld(), FVector(0, 0, 0), FString::FromInt(PowerLevel), this, FColor::White, 1.0f, true);
+	}
+}
+
+void ASTrackerBot::RefreshPath()
+{
+	NextPathPoint = GetNextPathPoint();
 }
 
 // Called every frame
@@ -183,6 +234,11 @@ void ASTrackerBot::Tick(float DeltaTime)
 		if (DistanceToTarget <= RequireDistanceToTarget)
 		{
 			NextPathPoint = GetNextPathPoint();
+
+			if(DebugTrackerBotDrawing)
+			{
+				DrawDebugString(GetWorld(), GetActorLocation(), "Target Reached!");
+			}
 		}
 		else
 		{
@@ -192,6 +248,16 @@ void ASTrackerBot::Tick(float DeltaTime)
 			ForceDirection *= MovementForce;
 
 			MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
+
+			if(DebugTrackerBotDrawing)
+			{
+				DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Yellow, false, 0.0f, 0, 1.0f);
+			}
+		}
+
+		if(DebugTrackerBotDrawing)
+		{
+			DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Yellow, false, 0.0f, 1.0f);
 		}
 	}
 }
@@ -204,7 +270,7 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 
-		if (PlayerPawn)
+		if (PlayerPawn && !USHealthComponent::IsFriendly(OtherActor, this))
 		{
 			if (HasAuthority())
 			{
